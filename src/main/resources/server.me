@@ -1,0 +1,39 @@
+use weiXinPro
+
+db.createUser({user: 'readWriteUser', pwd: 'yejy093', roles: [{role: "readWrite", db: "weiXinPro"}]})
+
+db.createUser({user: 'readUser', pwd: 'yejy093', roles: [{role: "read", db: "weiXinPro"}]})
+
+//users collection field
+users {
+    "_id":"jdfk",
+    "openId": "3333",
+    "wxUserInfo": {
+        name: "",
+        url: "",
+        gender:1,
+        city: "",
+        province: ""
+    },
+    "userInfo": {
+            name: "",
+            headPic: "",
+            gender:1,
+            phone:13630159257,
+            personalitySignature: ""
+    },
+    "address": {
+        "province": "",
+        "city": "",
+        "county": "",
+        "town": "",
+        "detail": ""
+    },
+    "auths": 9999  //权限999定义为系统管理员
+}
+
+//icons图标名称
+icons {
+    {page: 'mine', icons:["less_16.png", "hot_16.png", "more_unfold_16.png", "auto_16.png", "more_16.png"]}
+}
+

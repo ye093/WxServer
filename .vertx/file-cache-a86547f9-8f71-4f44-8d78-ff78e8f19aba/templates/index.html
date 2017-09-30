@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Good Thymes Virtual Grocery</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<h1>hello World</h1>
+<p th:text="${context.get('welcome')}">Welcome to our grocery store!</p>
+<form:inputText name="userName" value="${user.name}" />
+
+</body>
+
+</html>
