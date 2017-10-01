@@ -1,5 +1,6 @@
 package cn.life.main;
 
+import cn.life.auth.WxAuthCodeInterface;
 import cn.life.login.LoginInterface;
 import cn.life.pageConfig.PageConfigInterface;
 import cn.life.qiNiuPostService.QiNiuServiceInterface;
@@ -37,6 +38,11 @@ public class Server extends AbstractVerticle {
         router.get("/gg").handler(routingContext -> {
             routingContext.reroute("/web/index.html");
         });
+
+        //验证授权码
+        router.post("/authcode").handler(WxAuthCodeInterface::checkAuthCode);
+
+
         router.get("/web/*").handler(templateHandler);
 
         //----------------监听第三方回调开始--------------------------------
@@ -68,6 +74,9 @@ public class Server extends AbstractVerticle {
 
         //获取页面配置信息
         router.get("/pageconfig").produces("application/json").handler(PageConfigInterface::pageMessage);
+
+        //获取运营平台授权码
+        router.get("/authcode").produces("application/json").handler(WxAuthCodeInterface::authCode);
         //----------------用户自定义接口结束--------------------------------
 
         vertx.createHttpServer().requestHandler(router::accept).listen(8080);
