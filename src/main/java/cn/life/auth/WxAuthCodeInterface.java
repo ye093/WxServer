@@ -94,25 +94,26 @@ public class WxAuthCodeInterface {
                                 JsonObject resObj = result.result();
                                 if (resObj == null) {
                                     routingContext.response()
-                                            .putHeader("content-type", "application/json")
+                                            .putHeader("content-type", "text/html")
                                             .end(new JsonObject()
                                                     .put("code", 0).put("error", "code invalid!").toString());
                                 } else {
                                     String openId0 = resObj.getString("openId");
                                     int auth0 = resObj.getInteger("auth", 0);
                                     session.put(Constant.OPEN_ID_WEB, openId0).put(Constant.AUTH_WEB, auth0);
+                                    routingContext.setAcceptableContentType("text/html");
                                     routingContext.reroute(HttpMethod.GET, "/web/gonggao.html");
                                 }
                             } else {
                                 routingContext.response()
-                                        .putHeader("content-type", "application/json")
+                                        .putHeader("content-type", "text/html")
                                         .end(new JsonObject()
                                                 .put("code", 0).put("error", "result error!").toString());
                             }
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
                             routingContext.response()
-                                    .putHeader("content-type", "application/json")
+                                    .putHeader("content-type", "text/html")
                                     .end(new JsonObject()
                                             .put("code", 0).put("error", "other error!").toString());
                         } finally {
@@ -121,7 +122,7 @@ public class WxAuthCodeInterface {
                     });
         } catch (Exception e) {
             routingContext.response()
-                    .putHeader("content-type", "application/json")
+                    .putHeader("content-type", "text/html")
                     .end(new JsonObject()
                             .put("code", 0).put("error", "params error!").toString());
         }
