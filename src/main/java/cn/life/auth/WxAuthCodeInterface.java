@@ -1,6 +1,9 @@
 package cn.life.auth;
 
+import cn.life.config.Constant;
 import cn.life.dbhelper.MongoDBManager;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.mongo.UpdateOptions;
@@ -13,10 +16,10 @@ import io.vertx.ext.web.Session;
  */
 public class WxAuthCodeInterface {
 
-    public static void authCode(RoutingContext routingContext) {
+    public static void getAuthCode(RoutingContext routingContext) {
         Session session = routingContext.session();
-        String openId = session.get("openid");
-        Integer auth = session.get("auth");
+        String openId = session.get(Constant.OPEN_ID);
+        Integer auth = session.get(Constant.AUTH);
 
         if (openId == null || auth == null) {
             routingContext.response()
@@ -34,8 +37,10 @@ public class WxAuthCodeInterface {
 
         JsonObject updateObj = new JsonObject();
         updateObj.put("code", randomCode)
-                .put("deadLine", deadLine);
-        mongoClient.updateCollectionWithOptions("auth", new JsonObject().put("openId", openId),
+                .put("deadLine", deadLine)
+                .put("valid", true)
+                .put("auth", auth);
+        mongoClient.updateCollectionWithOptions("author", new JsonObject().put("openId", openId),
                 new JsonObject().put("$set", updateObj), new UpdateOptions(true), updateRes -> {
                     try {
                         if (updateRes.succeeded()) {
@@ -61,30 +66,55 @@ public class WxAuthCodeInterface {
 
     public static void checkAuthCode(RoutingContext routingContext) {
         Session session = routingContext.session();
+        String openId = session.get(Constant.OPEN_ID_WEB);
+        Integer auth = session.get(Constant.AUTH_WEB);
+        if (openId != null && auth != null) {
+            routingContext.reroute(HttpMethod.GET, "/web/gonggao.html");
+            return;
+        }
+
         try {
             int randomCode = Integer.parseInt(routingContext.request().getParam("authCode"));
             long currentTime = System.currentTimeMillis();
+            //在有效时间范围之内
             JsonObject geObj = new JsonObject().put("$gt", currentTime);
-            MongoClient mongoClient = MongoDBManager.getReadClient(routingContext.vertx());
-            mongoClient.findOneAndDelete("auth", new JsonObject().put("randomCode", randomCode).put("deadLine", geObj),
+            MongoClient mongoClient = MongoDBManager.getWriteClient(routingContext.vertx());
+            //查询完之后更改valid为false
+            JsonObject updateObj = new JsonObject().put("valid", false);
+            mongoClient.findOneAndUpdate("author",
+                    new JsonObject().put("$and", new JsonArray()
+                            .add(new JsonObject().put("code", randomCode))
+                            .add(new JsonObject().put("deadLine", geObj)
+                                                 .put("valid", true))
+                    ),
+                    new JsonObject().put("$set", updateObj),
                     result -> {
                         try {
                             if (result.succeeded()) {
                                 JsonObject resObj = result.result();
-                                String openId = resObj.getString("openId");
-                                session.put("openid", openId);
-                                routingContext.reroute("/web/gonggao.html");
+                                if (resObj == null) {
+                                    routingContext.response()
+                                            .putHeader("content-type", "application/json")
+                                            .end(new JsonObject()
+                                                    .put("code", 0).put("error", "code invalid!").toString());
+                                } else {
+                                    String openId0 = resObj.getString("openId");
+                                    int auth0 = resObj.getInteger("auth", 0);
+                                    session.put(Constant.OPEN_ID_WEB, openId0).put(Constant.AUTH_WEB, auth0);
+                                    routingContext.reroute(HttpMethod.GET, "/web/gonggao.html");
+                                }
                             } else {
                                 routingContext.response()
                                         .putHeader("content-type", "application/json")
                                         .end(new JsonObject()
-                                                .put("code", 0).put("error", "error!").toString());
+                                                .put("code", 0).put("error", "result error!").toString());
                             }
                         } catch (Exception e) {
+                            System.out.println(e.getMessage());
                             routingContext.response()
                                     .putHeader("content-type", "application/json")
                                     .end(new JsonObject()
-                                            .put("code", 0).put("error", "error!").toString());
+                                            .put("code", 0).put("error", "other error!").toString());
                         } finally {
                             mongoClient.close();
                         }
@@ -93,7 +123,7 @@ public class WxAuthCodeInterface {
             routingContext.response()
                     .putHeader("content-type", "application/json")
                     .end(new JsonObject()
-                            .put("code", 0).put("error", "error!").toString());
+                            .put("code", 0).put("error", "params error!").toString());
         }
     }
 }

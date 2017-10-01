@@ -1,5 +1,6 @@
 package cn.life.login;
 
+import cn.life.config.Constant;
 import cn.life.config.ServiceConfig;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
@@ -38,7 +39,7 @@ public class LoginInterface {
                         System.out.println("login response: " + body);
                         if (body != null && body.containsKey("openid")) {
                             Session session = routingContext.session();
-                            session.put("openid", body.getString("openid", ""));
+                            session.put(Constant.OPEN_ID, body.getString("openid", ""));
                             session.put("session_key", body.getString("session_key", ""));
 
                             //响应

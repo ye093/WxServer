@@ -1,5 +1,6 @@
 package cn.life.qiNiuPostService;
 
+import cn.life.config.Constant;
 import cn.life.config.ImageType;
 import cn.life.dbhelper.MongoDBManager;
 import cn.life.qiniu.DownloadService;
@@ -67,7 +68,7 @@ public class QiNiuServiceInterface {
      * 获取上传Token
      */
     public static void getUploadToken(RoutingContext routingContext) {
-        String openId = routingContext.session().get("openid");
+        String openId = routingContext.session().get(Constant.OPEN_ID);
         if (openId == null) {
             routingContext.response()
                     .putHeader("content-type", "application/json")

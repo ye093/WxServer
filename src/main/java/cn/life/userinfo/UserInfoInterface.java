@@ -1,6 +1,7 @@
 package cn.life.userinfo;
 
 import cn.life.auth.RoleMessage;
+import cn.life.config.Constant;
 import cn.life.config.ServiceConfig;
 import cn.life.dbhelper.MongoDBManager;
 import cn.life.qiniu.DownloadService;
@@ -23,7 +24,7 @@ public class UserInfoInterface {
      */
     public static void parseUserMessage(RoutingContext routingContext) {
         Session session = routingContext.session();
-        String openId = session.get("openid");
+        String openId = session.get(Constant.OPEN_ID);
         String sessionKey = session.get("session_key");
         if (openId == null || sessionKey == null) {
             //响应
@@ -98,7 +99,7 @@ public class UserInfoInterface {
      * 获取用户信息 name,url,gender,phone,personalitySignature
      */
     public static void getUserInfo(RoutingContext routingContext) {
-        String openId = routingContext.session().get("openid");
+        String openId = routingContext.session().get(Constant.OPEN_ID);
         if (openId == null) {
             routingContext.response()
                     .putHeader("content-type", "application/json")
@@ -114,7 +115,7 @@ public class UserInfoInterface {
      * 更新用户信息 name,url,gender,phone,personalitySignature
      */
     public static void updateUserInfo(RoutingContext routingContext) {
-        String openId = routingContext.session().get("openid");
+        String openId = routingContext.session().get(Constant.OPEN_ID);
         if (openId == null) {
             routingContext.response()
                     .putHeader("content-type", "application/json")
@@ -246,7 +247,7 @@ public class UserInfoInterface {
                         int auth = resultObj.getInteger("auths", -1);
                         if (auth != -1){
                             Session session = routingContext.session();
-                            session.put("auth", auth);
+                            session.put(Constant.AUTH, auth);
                             data.put("identity",  RoleMessage.getRoleMessage(auth));
                         }
                         mongoClient.close();

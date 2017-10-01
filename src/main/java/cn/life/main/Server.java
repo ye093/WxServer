@@ -1,14 +1,17 @@
 package cn.life.main;
 
 import cn.life.auth.WxAuthCodeInterface;
+import cn.life.config.Constant;
 import cn.life.login.LoginInterface;
 import cn.life.pageConfig.PageConfigInterface;
 import cn.life.qiNiuPostService.QiNiuServiceInterface;
 import cn.life.userinfo.UserInfoInterface;
 import cn.life.util.Runner;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.Session;
 import io.vertx.ext.web.handler.*;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.templ.ThymeleafTemplateEngine;
@@ -36,11 +39,19 @@ public class Server extends AbstractVerticle {
         TemplateHandler templateHandler = TemplateHandler.create(engine);
 
         router.get("/gg").handler(routingContext -> {
+            Session session = routingContext.session();
+            String openId = session.get(Constant.OPEN_ID_WEB);
+            Integer auth = session.get(Constant.AUTH_WEB);
+            if (openId != null && auth != null) {
+                routingContext.reroute(HttpMethod.GET, "/web/gonggao.html");
+                return;
+            }
             routingContext.reroute("/web/index.html");
         });
 
         //验证授权码
         router.post("/authcode").handler(WxAuthCodeInterface::checkAuthCode);
+        router.get("/authcode").handler(WxAuthCodeInterface::checkAuthCode);
 
 
         router.get("/web/*").handler(templateHandler);
@@ -76,7 +87,7 @@ public class Server extends AbstractVerticle {
         router.get("/pageconfig").produces("application/json").handler(PageConfigInterface::pageMessage);
 
         //获取运营平台授权码
-        router.get("/authcode").produces("application/json").handler(WxAuthCodeInterface::authCode);
+        router.get("/getauthcode").produces("application/json").handler(WxAuthCodeInterface::getAuthCode);
         //----------------用户自定义接口结束--------------------------------
 
         vertx.createHttpServer().requestHandler(router::accept).listen(8080);
